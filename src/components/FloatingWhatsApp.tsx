@@ -27,18 +27,20 @@ const FloatingWhatsApp: React.FC<FloatingWhatsAppProps> = ({ number }) => {
   };
 
   return (
-    <motion.a
+    <a
       href={whatsappUrl}
-      onClick={handleContact}
-      initial={{ scale: 0, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
+      onClick={() => {
+        try {
+          handleContact();
+        } catch (e) {
+          console.error('Contact recording error:', e);
+        }
+      }}
       className="fixed bottom-24 right-6 z-40 bg-[#25D366] text-white p-4 rounded-full shadow-2xl shadow-green-500/30 flex items-center justify-center border-4 border-white dark:border-slate-900 transition-all cursor-pointer"
     >
       <MessageCircle className="w-8 h-8 fill-white/10" />
       <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
-    </motion.a>
+    </a>
   );
 };
 

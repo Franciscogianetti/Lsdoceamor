@@ -553,12 +553,16 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
           </div>
           
           {isAnySelected ? (
-            <motion.a
+            <a
               href={whatsappLink}
-              onClick={handleOrder}
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              className="w-full bg-[#25D366] hover:bg-[#20bd5c] text-white py-4 px-8 rounded-full flex items-center justify-center gap-3 shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-transform active:scale-95 duration-200"
+              onClick={() => {
+                try {
+                  handleOrder();
+                } catch (e) {
+                  console.error('Order recording error:', e);
+                }
+              }}
+              className="w-full bg-[#25D366] hover:bg-[#20bd5c] text-white py-4 px-8 rounded-full flex items-center justify-center gap-3 shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-all active:scale-95 duration-200 z-[100]"
             >
               <MessageCircle className="w-6 h-6" />
               <div className="flex flex-col items-center">
@@ -567,7 +571,7 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
                   {selectedItems.length} itens selecionados
                 </span>
               </div>
-            </motion.a>
+            </a>
           ) : (
             <div className="w-full bg-slate-100 dark:bg-slate-800 text-slate-400 py-4 px-8 rounded-full flex items-center justify-center gap-3 font-black text-sm uppercase tracking-widest transition-all shadow-inner">
               Escolha pelo menos 1 item
@@ -792,17 +796,21 @@ const ProductDetailScreen = ({ products, settings }: { products: Product[], sett
         </section>
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 p-6 bg-white/80 backdrop-blur-xl border-t border-gray-100 flex justify-center items-center z-40 pb-safe">
-        <motion.a
+      <footer className="fixed bottom-0 left-0 right-0 p-6 bg-white/80 backdrop-blur-xl border-t border-gray-100 flex justify-center items-center z-[100] pb-safe">
+        <a
           href={whatsappLink}
-          onClick={handleOrder}
-          className="w-full max-w-md bg-[#25D366] hover:bg-[#20bd5c] text-white py-4 px-8 rounded-full flex items-center justify-center gap-3 shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-transform active:scale-95 duration-200"
-          animate={{ scale: [1, 1.03, 1] }}
-          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+          onClick={() => {
+            try {
+              handleOrder();
+            } catch (e) {
+              console.error('Order recording error:', e);
+            }
+          }}
+          className="w-full max-w-md bg-[#25D366] hover:bg-[#20bd5c] text-white py-4 px-8 rounded-full flex items-center justify-center gap-3 shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-all active:scale-95 duration-200"
         >
           <MessageCircle className="w-6 h-6" />
           <span className="text-xl font-black uppercase tracking-tight">Pedir pelo WhatsApp</span>
-        </motion.a>
+        </a>
       </footer>
     </motion.div>
   );
@@ -864,31 +872,40 @@ const AboutScreen = ({ isDark, toggleTheme, settings }: { isDark: boolean, toggl
         </div>
 
         <div className="grid grid-cols-1 gap-5">
-          <motion.button
-            onClick={async () => {
-              const whatsappUrl = `https://wa.me/${settings?.whatsapp_number?.replace(/\D/g, '') || '5511988789335'}`;
-              const userName = localStorage.getItem('userName') || 'Cliente';
-              
-              await supabase.from('orders').insert([{
-                customer_name: userName,
-                items: [{ name: 'Contato Direto (Página Sobre)', price: 0, quantity: 1 }],
-                total_price: 0,
-                whatsapp_link: whatsappUrl,
-                status: 'contato'
-              }]);
-
-              window.open(whatsappUrl, '_blank');
+          <a
+            href={`https://api.whatsapp.com/send?phone=${
+              (settings?.whatsapp_number?.replace(/\D/g, '') || '5511988789335').startsWith('55') 
+                ? settings?.whatsapp_number?.replace(/\D/g, '') 
+                : '55' + (settings?.whatsapp_number?.replace(/\D/g, '') || '11988789335')
+            }`}
+            onClick={() => {
+              try {
+                const whatsappUrl = `https://api.whatsapp.com/send?phone=${
+                  (settings?.whatsapp_number?.replace(/\D/g, '') || '5511988789335').startsWith('55') 
+                    ? settings?.whatsapp_number?.replace(/\D/g, '') 
+                    : '55' + (settings?.whatsapp_number?.replace(/\D/g, '') || '11988789335')
+                }`;
+                const userName = localStorage.getItem('userName') || 'Cliente';
+                
+                supabase.from('orders').insert([{
+                  customer_name: userName,
+                  items: [{ name: 'Contato Direto (Página Sobre)', price: 0, quantity: 1 }],
+                  total_price: 0,
+                  whatsapp_link: whatsappUrl,
+                  status: 'contato'
+                }]).then(() => {});
+              } catch (e) {
+                console.error('Contact error:', e);
+              }
             }}
-            className="w-full flex items-center justify-between bg-[#25D366] text-white px-8 py-5 rounded-full font-black shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] active:scale-95 transition-all text-left"
-            animate={{ scale: [1, 1.02, 1] }}
-            transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+            className="w-full flex items-center justify-between bg-[#25D366] text-white px-8 py-5 rounded-full font-black shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-all active:scale-95 text-left"
           >
             <div className="flex items-center gap-4 text-lg uppercase tracking-widest">
               <MessageCircle className="w-7 h-7" />
               <span>WhatsApp</span>
             </div>
             <Plus className="h-6 w-6" />
-          </motion.button>
+          </a>
           
           <div className="grid grid-cols-2 gap-4 mt-2">
             {socialLinks.map((social, idx) => (
