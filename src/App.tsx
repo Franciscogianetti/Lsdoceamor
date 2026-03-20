@@ -431,40 +431,39 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
   const selectedItems = Object.values(selections).flat() as Product[];
   const isAnySelected = selectedItems.length > 0;
 
-  const handleOrder = async () => {
-    let text = `Olá! Gostaria de montar o meu combo:\n\n`;
-    const orderItems: any[] = [];
-    
-    comboSections.forEach(section => {
+  const whatsappLink = `https://wa.me/${settings?.whatsapp_number?.replace(/\D/g, '') || '5511988789335'}?text=${encodeURIComponent(
+    `Olá! Gostaria de montar o meu combo:\n\n` +
+    comboSections.map(section => {
       const selectedArray = selections[section.id] || [];
       if (selectedArray.length > 0) {
-        text += `*${section.name}*:\n`;
-        selectedArray.forEach(item => {
-          text += `- ${item.name}\n`;
-          orderItems.push({ name: `${section.name}: ${item.name}`, price: item.price, quantity: 1 });
-        });
-        text += `\n`;
+        return `*${section.name}*:\n` + selectedArray.map(item => `- ${item.name}`).join('\n') + '\n';
       }
+      return '';
+    }).join('\n').trim()
+  )}`;
+
+  const handleOrder = () => {
+    const orderItems: any[] = [];
+    comboSections.forEach(section => {
+      const selectedArray = selections[section.id] || [];
+      selectedArray.forEach(item => {
+        orderItems.push({ name: `${section.name}: ${item.name}`, price: item.price, quantity: 1 });
+      });
     });
 
-    const whatsappLink = `https://wa.me/${settings?.whatsapp_number?.replace(/\D/g, '') || '5511988789335'}?text=${encodeURIComponent(text)}`;
-    
     // Record in database
     const userName = localStorage.getItem('userName') || 'Cliente';
     const totalPrice = selectedItems.reduce((sum, item) => sum + item.price, 0);
 
-    const { error } = await supabase.from('orders').insert([{
+    supabase.from('orders').insert([{
       customer_name: userName,
       items: orderItems,
       total_price: totalPrice,
       whatsapp_link: whatsappLink,
       status: 'pendente'
-    }]);
-
-    if (error) console.error('Error recording combo order:', error);
-
-    // Open WhatsApp
-    window.open(whatsappLink, '_blank');
+    }]).then(({ error }) => {
+      if (error) console.error('Error recording combo order:', error);
+    });
   };
 
   return (
@@ -550,7 +549,10 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
           </div>
           
           {isAnySelected ? (
-            <motion.button
+            <motion.a
+              href={whatsappLink}
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={handleOrder}
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -563,7 +565,7 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
                   {selectedItems.length} itens selecionados
                 </span>
               </div>
-            </motion.button>
+            </motion.a>
           ) : (
             <div className="w-full bg-slate-100 dark:bg-slate-800 text-slate-400 py-4 px-8 rounded-full flex items-center justify-center gap-3 font-black text-sm uppercase tracking-widest transition-all shadow-inner">
               Escolha pelo menos 1 item
@@ -692,23 +694,21 @@ const ProductDetailScreen = ({ products, settings }: { products: Product[], sett
 
   if (!product) return <div>Produto não encontrado</div>;
 
-  const handleOrder = async () => {
+  const whatsappLink = `https://wa.me/${settings?.whatsapp_number?.replace(/\D/g, '') || '5511988789335'}?text=Olá! Gostaria de pedir o ${product.name}`;
+
+  const handleOrder = () => {
     const userName = localStorage.getItem('userName') || 'Cliente';
-    const whatsappLink = `https://wa.me/${settings?.whatsapp_number?.replace(/\D/g, '') || '5511988789335'}?text=Olá! Gostaria de pedir o ${product.name}`;
     
     // Record in DB
-    const { error } = await supabase.from('orders').insert([{
+    supabase.from('orders').insert([{
       customer_name: userName,
       items: [{ name: product.name, price: product.price, quantity: 1 }],
       total_price: product.price,
       whatsapp_link: whatsappLink,
       status: 'pendente'
-    }]);
-
-    if (error) console.error('Error recording order:', error);
-    
-    // Open WhatsApp
-    window.open(whatsappLink, '_blank');
+    }]).then(({ error }) => {
+      if (error) console.error('Error recording order:', error);
+    });
   };
 
   return (
@@ -788,7 +788,10 @@ const ProductDetailScreen = ({ products, settings }: { products: Product[], sett
       </main>
 
       <footer className="fixed bottom-0 left-0 right-0 p-6 bg-white/80 backdrop-blur-xl border-t border-gray-100 flex justify-center items-center z-40 pb-safe">
-        <motion.button
+        <motion.a
+          href={whatsappLink}
+          target="_blank"
+          rel="noopener noreferrer"
           onClick={handleOrder}
           className="w-full max-w-md bg-[#25D366] hover:bg-[#20bd5c] text-white py-4 px-8 rounded-full flex items-center justify-center gap-3 shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-transform active:scale-95 duration-200"
           animate={{ scale: [1, 1.03, 1] }}
@@ -796,7 +799,7 @@ const ProductDetailScreen = ({ products, settings }: { products: Product[], sett
         >
           <MessageCircle className="w-6 h-6" />
           <span className="text-xl font-black uppercase tracking-tight">Pedir pelo WhatsApp</span>
-        </motion.button>
+        </motion.a>
       </footer>
     </motion.div>
   );
