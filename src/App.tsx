@@ -452,7 +452,8 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
     }).join('\n').trim()
   )}`;
 
-  const handleOrder = () => {
+  const handleOrder = (e: React.MouseEvent) => {
+    e.preventDefault();
     try {
       const userName = localStorage.getItem('userName') || 'Cliente';
       const orderItems: any[] = [];
@@ -470,7 +471,12 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
         whatsapp_link: whatsappLink,
         status: 'pendente'
       }]).then(() => {});
-    } catch (err) {}
+
+      // Safe manual redirect for Safari (working pattern from About page)
+      window.location.href = whatsappLink;
+    } catch (err) {
+      window.location.href = whatsappLink;
+    }
   };
 
   return (
@@ -695,7 +701,8 @@ const ProductDetailScreen = ({ products, settings }: { products: Product[], sett
   const phone = getFormattedPhone(settings?.whatsapp_number);
   const whatsappLink = `https://wa.me/${phone}?text=${encodeURIComponent(`Olá! Gostaria de pedir o ${product.name}`)}`;
 
-  const handleOrder = () => {
+  const handleOrder = (e: React.MouseEvent) => {
+    e.preventDefault();
     try {
       const userName = localStorage.getItem('userName') || 'Cliente';
       supabase.from('orders').insert([{
@@ -705,7 +712,12 @@ const ProductDetailScreen = ({ products, settings }: { products: Product[], sett
         whatsapp_link: whatsappLink,
         status: 'pendente'
       }]).then(() => {});
-    } catch (err) {}
+      
+      // Syncing with working pattern on AboutScreen
+      window.location.href = whatsappLink;
+    } catch (err) {
+      window.location.href = whatsappLink;
+    }
   };
 
   return (
