@@ -11,10 +11,11 @@ const FloatingWhatsApp: React.FC<FloatingWhatsAppProps> = ({ number }) => {
   const phone = (() => {
     const clean = (number || '').replace(/\D/g, '');
     if (!clean || clean.length < 10) return '5511988789335';
-    if (clean.startsWith('55')) return clean;
-    return '55' + clean.replace(/^0/, '');
+    const withoutLeadingZero = clean.replace(/^0+/, '');
+    if (withoutLeadingZero.startsWith('55')) return withoutLeadingZero;
+    return '55' + withoutLeadingZero;
   })();
-  const whatsappUrl = `https://api.whatsapp.com/send?phone=${phone}`;
+  const whatsappUrl = `https://wa.me/${phone}/`;
 
   const handleContact = () => {
     const userName = localStorage.getItem('userName') || 'Cliente';
@@ -32,14 +33,13 @@ const FloatingWhatsApp: React.FC<FloatingWhatsAppProps> = ({ number }) => {
   return (
     <a
       href={whatsappUrl}
-      target="_blank"
-      rel="noopener noreferrer"
       onClick={() => {
         try {
           handleContact();
         } catch (e) {
           console.error('Contact recording error:', e);
         }
+        window.location.href = whatsappUrl;
       }}
       className="fixed bottom-24 right-6 z-40 bg-[#25D366] text-white p-4 rounded-full shadow-2xl shadow-green-500/30 flex items-center justify-center border-4 border-white dark:border-slate-900 transition-all cursor-pointer"
     >

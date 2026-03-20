@@ -433,13 +433,15 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
 
   const getFormattedPhone = (num: string | undefined) => {
     const clean = (num || '').replace(/\D/g, '');
-    if (!clean || clean.length < 10) return '5511988789335'; // Early return for invalid/fallback
-    if (clean.startsWith('55')) return clean;
-    return '55' + clean.replace(/^0/, '');
+    if (!clean || clean.length < 10) return '5511988789335';
+    // Remove leading zero if present and ensure 55 prefix
+    const withoutLeadingZero = clean.replace(/^0+/, '');
+    if (withoutLeadingZero.startsWith('55')) return withoutLeadingZero;
+    return '55' + withoutLeadingZero;
   };
 
   const phone = getFormattedPhone(settings?.whatsapp_number);
-  const whatsappLink = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(
+  const whatsappLink = `https://wa.me/${phone}/?text=${encodeURIComponent(
     `Olá! Gostaria de montar o meu combo:\n\n` +
     comboSections.map(section => {
       const selectedArray = selections[section.id] || [];
@@ -450,40 +452,31 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
     }).join('\n').trim()
   )}`;
 
-  const handleOrder = () => {
-    const orderItems: any[] = [];
-    comboSections.forEach(section => {
-      const selectedArray = selections[section.id] || [];
-      selectedArray.forEach(item => {
-        orderItems.push({ name: `${section.name}: ${item.name}`, price: item.price, quantity: 1 });
-      });
-    });
-
+  const handleOrder = (e: React.MouseEvent) => {
+    // Record in database
     try {
-      // Record in database
       const userName = localStorage.getItem('userName') || 'Cliente';
-      const totalPrice = selectedItems.reduce((sum, item) => sum + item.price, 0);
+      const orderItems: any[] = [];
+      comboSections.forEach(section => {
+        const selectedArray = selections[section.id] || [];
+        selectedArray.forEach(item => {
+          orderItems.push({ name: `${section.name}: ${item.name}`, price: item.price, quantity: 1 });
+        });
+      });
 
       supabase.from('orders').insert([{
         customer_name: userName,
         items: orderItems,
-        total_price: totalPrice,
+        total_price: selectedItems.reduce((sum, item) => sum + item.price, 0),
         whatsapp_link: whatsappLink,
         status: 'pendente'
-      }]).then(({ error }) => {
-        if (error) console.error('Error recording combo order:', error);
-      });
+      }]).then(() => {});
     } catch (err) {
       console.error('DB Error:', err);
     }
     
-    // Fallback for some browsers if <a> fails
-    setTimeout(() => {
-      if (window.location.href.includes('combo')) {
-        // Still on same page after click? Try manual redirect
-        // But only if not opened in new tab
-      }
-    }, 1000);
+    // Explicit redirection for iOS reliability
+    window.location.href = whatsappLink;
   };
 
   return (
@@ -571,8 +564,6 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
           {isAnySelected ? (
             <a
               href={whatsappLink}
-              target="_blank"
-              rel="noopener noreferrer"
               onClick={handleOrder}
               className="w-full bg-[#25D366] hover:bg-[#20bd5c] text-white py-4 px-8 rounded-full flex items-center justify-center gap-3 shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-all active:scale-95 duration-200 z-[100]"
             >
@@ -715,26 +706,28 @@ const ProductDetailScreen = ({ products, settings }: { products: Product[], sett
   const getFormattedPhone = (num: string | undefined) => {
     const clean = (num || '').replace(/\D/g, '');
     if (!clean || clean.length < 10) return '5511988789335';
-    if (clean.startsWith('55')) return clean;
-    return '55' + clean.replace(/^0/, '');
+    const withoutLeadingZero = clean.replace(/^0+/, '');
+    if (withoutLeadingZero.startsWith('55')) return withoutLeadingZero;
+    return '55' + withoutLeadingZero;
   };
 
   const phone = getFormattedPhone(settings?.whatsapp_number);
-  const whatsappLink = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(`Olá! Gostaria de pedir o ${product.name}`)}`;
+  const whatsappLink = `https://wa.me/${phone}/?text=${encodeURIComponent(`Olá! Gostaria de pedir o ${product.name}`)}`;
 
-  const handleOrder = () => {
-    const userName = localStorage.getItem('userName') || 'Cliente';
-    
-    // Record in DB
-    supabase.from('orders').insert([{
-      customer_name: userName,
-      items: [{ name: product.name, price: product.price, quantity: 1 }],
-      total_price: product.price,
-      whatsapp_link: whatsappLink,
-      status: 'pendente'
-    }]).then(({ error }) => {
-      if (error) console.error('Error recording order:', error);
-    });
+  const handleOrder = (e: React.MouseEvent) => {
+    try {
+      const userName = localStorage.getItem('userName') || 'Cliente';
+      supabase.from('orders').insert([{
+        customer_name: userName,
+        items: [{ name: product.name, price: product.price, quantity: 1 }],
+        total_price: product.price,
+        whatsapp_link: whatsappLink,
+        status: 'pendente'
+      }]).then(() => {});
+    } catch (err) {
+      console.error('DB Error:', err);
+    }
+    window.location.href = whatsappLink;
   };
 
   return (
@@ -813,13 +806,11 @@ const ProductDetailScreen = ({ products, settings }: { products: Product[], sett
         </section>
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 p-6 bg-white/80 backdrop-blur-xl border-t border-gray-100 flex justify-center items-center z-[100] pb-safe">
+      <footer className="fixed bottom-0 left-0 right-0 p-6 bg-white/80 backdrop-blur-xl border-t border-gray-100 flex justify-center items-center z-[200] pb-safe">
         <a
           href={whatsappLink}
-          target="_blank"
-          rel="noopener noreferrer"
           onClick={handleOrder}
-          className="w-full max-w-md bg-[#25D366] hover:bg-[#20bd5c] text-white py-4 px-8 rounded-full flex items-center justify-center gap-3 shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-all active:scale-95 duration-200"
+          className="w-full max-w-md bg-[#25D366] hover:bg-[#20bd5c] text-white py-4 px-8 rounded-full flex items-center justify-center gap-3 shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-all active:scale-95 duration-200 cursor-pointer"
         >
           <MessageCircle className="w-6 h-6" />
           <span className="text-xl font-black uppercase tracking-tight">Pedir pelo WhatsApp</span>
@@ -886,25 +877,25 @@ const AboutScreen = ({ isDark, toggleTheme, settings }: { isDark: boolean, toggl
 
         <div className="grid grid-cols-1 gap-5">
           <a
-            href={`https://api.whatsapp.com/send?phone=${
+            href={`https://wa.me/${
               (() => {
                 const clean = (settings?.whatsapp_number || '').replace(/\D/g, '');
                 if (!clean || clean.length < 10) return '5511988789335';
-                if (clean.startsWith('55')) return clean;
-                return '55' + clean.replace(/^0/, '');
+                const withoutLeadingZero = clean.replace(/^0+/, '');
+                if (withoutLeadingZero.startsWith('55')) return withoutLeadingZero;
+                return '55' + withoutLeadingZero;
               })()
-            }`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => {
+            }/`}
+            onClick={(e) => {
               try {
                 const phone = (() => {
                   const clean = (settings?.whatsapp_number || '').replace(/\D/g, '');
                   if (!clean || clean.length < 10) return '5511988789335';
-                  if (clean.startsWith('55')) return clean;
-                  return '55' + clean.replace(/^0/, '');
+                  const withoutLeadingZero = clean.replace(/^0+/, '');
+                  if (withoutLeadingZero.startsWith('55')) return withoutLeadingZero;
+                  return '55' + withoutLeadingZero;
                 })();
-                const whatsappUrl = `https://api.whatsapp.com/send?phone=${phone}`;
+                const whatsappUrl = `https://wa.me/${phone}/`;
                 const userName = localStorage.getItem('userName') || 'Cliente';
                 
                 supabase.from('orders').insert([{
@@ -914,6 +905,8 @@ const AboutScreen = ({ isDark, toggleTheme, settings }: { isDark: boolean, toggl
                   whatsapp_link: whatsappUrl,
                   status: 'contato'
                 }]).then(() => {});
+                
+                window.location.href = whatsappUrl;
               } catch (e) {
                 console.error('Contact error:', e);
               }
