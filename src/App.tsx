@@ -50,6 +50,7 @@ import { Product } from './types';
 import { supabase } from './lib/supabase';
 import AdminScreen from './AdminScreen';
 import Logo from './components/Logo';
+import FloatingWhatsApp from './components/FloatingWhatsApp';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -180,7 +181,7 @@ const ProductCard: React.FC<{ product: Product, onClick: () => void }> = ({ prod
 
 // --- Screens ---
 
-const HomeScreen = ({ isDark, toggleTheme, products }: { isDark: boolean, toggleTheme: () => void, products: Product[] }) => {
+const HomeScreen = ({ isDark, toggleTheme, products, settings }: { isDark: boolean, toggleTheme: () => void, products: Product[], settings: any }) => {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('amigo(a)');
 
@@ -338,7 +339,7 @@ const HomeScreen = ({ isDark, toggleTheme, products }: { isDark: boolean, toggle
   );
 };
 
-const MenuScreen = ({ isDark, toggleTheme, products }: { isDark: boolean, toggleTheme: () => void, products: Product[] }) => {
+const MenuScreen = ({ isDark, toggleTheme, products, settings }: { isDark: boolean, toggleTheme: () => void, products: Product[], settings: any }) => {
   const navigate = useNavigate();
   const [category, setCategory] = useState('all');
   const allProducts = products;
@@ -613,7 +614,7 @@ const CategoryScreen = ({ isDark, toggleTheme, products, settings }: { isDark: b
   );
 };
 
-const SearchScreen = ({ isDark, toggleTheme, products }: { isDark: boolean, toggleTheme: () => void, products: Product[] }) => {
+const SearchScreen = ({ isDark, toggleTheme, products, settings }: { isDark: boolean, toggleTheme: () => void, products: Product[], settings: any }) => {
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
   const allProducts = products;
@@ -903,7 +904,7 @@ const AboutScreen = ({ isDark, toggleTheme, settings }: { isDark: boolean, toggl
   );
 };
 
-const AuthScreen = ({ isDark, toggleTheme }: { isDark: boolean, toggleTheme: () => void }) => {
+const AuthScreen = ({ isDark, toggleTheme, settings }: { isDark: boolean, toggleTheme: () => void, settings: any }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState('');
@@ -1132,6 +1133,23 @@ export default function App() {
 
   useEffect(() => {
     fetchData();
+
+    // Subscribe to real-time settings updates
+    const channel = supabase
+      .channel('settings_realtime')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'settings', filter: 'id=eq.store_config' }, 
+        (payload) => {
+          if (payload.new) {
+            setSettings(payload.new);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
   }, []);
 
   // Refetch when entering public screens from admin or vice versa
@@ -1162,17 +1180,22 @@ export default function App() {
       )}>
         <AnimatePresence mode="wait">
           <Routes>
-            <Route path="/" element={<HomeScreen isDark={isDark} toggleTheme={toggleTheme} products={availableProducts} />} />
-            <Route path="/menu" element={<MenuScreen isDark={isDark} toggleTheme={toggleTheme} products={availableProducts} />} />
-            <Route path="/search" element={<SearchScreen isDark={isDark} toggleTheme={toggleTheme} products={availableProducts} />} />
+            <Route path="/" element={<HomeScreen isDark={isDark} toggleTheme={toggleTheme} products={availableProducts} settings={settings} />} />
+            <Route path="/menu" element={<MenuScreen isDark={isDark} toggleTheme={toggleTheme} products={availableProducts} settings={settings} />} />
+            <Route path="/search" element={<SearchScreen isDark={isDark} toggleTheme={toggleTheme} products={availableProducts} settings={settings} />} />
             <Route path="/category/:id" element={<CategoryScreen isDark={isDark} toggleTheme={toggleTheme} products={availableProducts} settings={settings} />} />
             <Route path="/product/:id" element={<ProductDetailScreen products={products} settings={settings} />} />
             <Route path="/about" element={<AboutScreen isDark={isDark} toggleTheme={toggleTheme} settings={settings} />} />
-            <Route path="/auth" element={<AuthScreen isDark={isDark} toggleTheme={toggleTheme} />} />
+            <Route path="/auth" element={<AuthScreen isDark={isDark} toggleTheme={toggleTheme} settings={settings} />} />
             <Route path="/admin" element={<AdminScreen />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AnimatePresence>
+        
+        {/* Floating WhatsApp only on non-admin routes */}
+        {!pathname.startsWith('/admin') && settings?.whatsapp_number && (
+          <FloatingWhatsApp number={settings.whatsapp_number} />
+        )}
       </div>
   );
 }
