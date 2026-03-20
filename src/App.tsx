@@ -552,22 +552,20 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
             </div>
           );
         })}
-        <div className="p-6 mt-8 flex justify-center">
-            <a
-              href={whatsappLink}
-              target="_top"
-              onClick={handleOrder}
-              className="w-full max-w-md bg-[#25D366] hover:bg-[#20bd5c] text-white py-5 px-8 rounded-full flex items-center justify-center gap-3 shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-all active:scale-95 duration-200"
-            >
-              <MessageCircle className="w-6 h-6" />
-              <div className="flex flex-col items-center">
-                <span className="font-black text-sm uppercase tracking-widest leading-none">Pedir pelo WhatsApp</span>
-                <span className="text-[10px] opacity-80 font-bold mt-1">
-                  {selectedItems.length} itens selecionados
-                </span>
-              </div>
-            </a>
-        </div>
+            <div className="w-full">
+              <button
+                onClick={() => navigate('/about')}
+                className="w-full bg-primary hover:bg-primary/90 text-white py-5 px-8 rounded-full flex items-center justify-center gap-3 shadow-lg transition-all active:scale-95 duration-200"
+              >
+                <ShoppingBag className="w-6 h-6" />
+                <div className="flex flex-col items-center">
+                  <span className="font-black text-sm uppercase tracking-widest leading-none">Fazer Pedido</span>
+                  <span className="text-[10px] opacity-80 font-bold mt-1">
+                    {selectedItems.length} itens selecionados
+                  </span>
+                </div>
+              </button>
+            </div>
       </main>
     </motion.div>
   );
@@ -797,15 +795,13 @@ const ProductDetailScreen = ({ products, settings }: { products: Product[], sett
       </main>
 
             <div className="mt-12 flex justify-center pb-12">
-              <a
-                href={whatsappLink}
-                target="_top"
-                onClick={handleOrder}
-                className="w-full max-w-md bg-[#25D366] hover:bg-[#20bd5c] text-white py-5 px-8 rounded-full flex items-center justify-center gap-3 shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-all active:scale-95 duration-200 cursor-pointer"
+              <button
+                onClick={() => navigate('/about')}
+                className="w-full max-w-md bg-primary hover:bg-primary/90 text-white py-5 px-8 rounded-full flex items-center justify-center gap-3 shadow-lg transition-all active:scale-95 duration-200 cursor-pointer"
               >
-                <MessageCircle className="w-6 h-6" />
-                <span className="text-xl font-black uppercase tracking-tight">Pedir pelo WhatsApp</span>
-              </a>
+                <ShoppingBag className="w-6 h-6" />
+                <span className="text-xl font-black uppercase tracking-tight">Fazer Pedido</span>
+              </button>
             </div>
     </motion.div>
   );
@@ -906,7 +902,7 @@ const AboutScreen = ({ isDark, toggleTheme, settings }: { isDark: boolean, toggl
           >
             <div className="flex items-center gap-4 text-lg uppercase tracking-widest">
               <MessageCircle className="w-7 h-7" />
-              <span>WhatsApp</span>
+              <span>Fazer pedido aqui</span>
             </div>
             <Plus className="h-6 w-6" />
           </a>
