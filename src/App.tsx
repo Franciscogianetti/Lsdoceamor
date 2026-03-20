@@ -1184,6 +1184,15 @@ export default function App() {
 
   const availableProducts = products.filter(p => p.is_available !== false);
 
+  // Auth Guard Component
+  const RequireAuth = ({ children }: { children: React.ReactNode }) => {
+    const userName = localStorage.getItem('userName');
+    if (!userName) {
+      return <Navigate to="/auth" replace />;
+    }
+    return <>{children}</>;
+  };
+
   return (
     <div className={cn(
         "max-w-md md:max-w-3xl mx-auto bg-slate-50 min-h-screen relative shadow-2xl overflow-x-hidden transition-all duration-300",
@@ -1191,20 +1200,20 @@ export default function App() {
       )}>
         <AnimatePresence mode="wait">
           <Routes>
-            <Route path="/" element={<HomeScreen isDark={isDark} toggleTheme={toggleTheme} products={availableProducts} settings={settings} />} />
-            <Route path="/menu" element={<MenuScreen isDark={isDark} toggleTheme={toggleTheme} products={availableProducts} settings={settings} />} />
-            <Route path="/search" element={<SearchScreen isDark={isDark} toggleTheme={toggleTheme} products={availableProducts} settings={settings} />} />
-            <Route path="/category/:id" element={<CategoryScreen isDark={isDark} toggleTheme={toggleTheme} products={availableProducts} settings={settings} />} />
-            <Route path="/product/:id" element={<ProductDetailScreen products={products} settings={settings} />} />
-            <Route path="/about" element={<AboutScreen isDark={isDark} toggleTheme={toggleTheme} settings={settings} />} />
+            <Route path="/" element={<RequireAuth><HomeScreen isDark={isDark} toggleTheme={toggleTheme} products={availableProducts} settings={settings} /></RequireAuth>} />
+            <Route path="/menu" element={<RequireAuth><MenuScreen isDark={isDark} toggleTheme={toggleTheme} products={availableProducts} settings={settings} /></RequireAuth>} />
+            <Route path="/search" element={<RequireAuth><SearchScreen isDark={isDark} toggleTheme={toggleTheme} products={availableProducts} settings={settings} /></RequireAuth>} />
+            <Route path="/category/:id" element={<RequireAuth><CategoryScreen isDark={isDark} toggleTheme={toggleTheme} products={availableProducts} settings={settings} /></RequireAuth>} />
+            <Route path="/product/:id" element={<RequireAuth><ProductDetailScreen products={products} settings={settings} /></RequireAuth>} />
+            <Route path="/about" element={<RequireAuth><AboutScreen isDark={isDark} toggleTheme={toggleTheme} settings={settings} /></RequireAuth>} />
             <Route path="/auth" element={<AuthScreen isDark={isDark} toggleTheme={toggleTheme} settings={settings} />} />
             <Route path="/admin" element={<AdminScreen />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AnimatePresence>
         
-        {/* Floating WhatsApp only on non-admin routes */}
-        {!pathname.startsWith('/admin') && settings?.whatsapp_number && (
+        {/* Floating WhatsApp only on non-admin routes AND after login */}
+        {!pathname.startsWith('/admin') && pathname !== '/auth' && localStorage.getItem('userName') && settings?.whatsapp_number && (
           <FloatingWhatsApp number={settings.whatsapp_number} />
         )}
       </div>
