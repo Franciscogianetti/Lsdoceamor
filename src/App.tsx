@@ -57,22 +57,8 @@ function cn(...inputs: ClassValue[]) {
 
 // --- Components ---
 
-const Navbar = ({ isDark, toggleTheme }: { isDark: boolean, toggleTheme: () => void }) => {
-  const { pathname } = useLocation();
+const TopBar = ({ isDark, toggleTheme }: { isDark: boolean, toggleTheme: () => void }) => {
   const navigate = useNavigate();
-  const isAdmin = localStorage.getItem('isAdmin') === 'true';
-
-  const navItems = [
-    { id: 'home', label: 'Início', icon: HomeIcon, path: '/' },
-    { id: 'menu', label: 'Cardápio', icon: MenuIcon, path: '/menu' },
-    { id: 'about', label: 'Sobre', icon: Info, path: '/about' },
-    { 
-      id: isAdmin ? 'admin' : 'auth', 
-      label: isAdmin ? 'Admin' : 'Perfil', 
-      icon: isAdmin ? LayoutDashboard : User, 
-      path: isAdmin ? '/admin' : '/auth' 
-    },
-  ];
 
   return (
     <header className="sticky top-0 z-50 bg-surface/90 backdrop-blur-xl border-b border-primary/10 transition-all duration-300 shadow-sm px-4">
@@ -81,30 +67,6 @@ const Navbar = ({ isDark, toggleTheme }: { isDark: boolean, toggleTheme: () => v
         <div className="flex items-center cursor-pointer transition-transform hover:scale-105 active:scale-95 flex-shrink-0" onClick={() => navigate('/')}>
           <Logo iconSize={40} textSize="text-lg" />
         </div>
-
-        {/* Navigation Section */}
-        <nav className="flex-1 flex items-center justify-center bg-secondary/80 dark:bg-secondary/20 p-1 rounded-2xl overflow-x-auto hide-scrollbar max-w-[280px] md:max-w-md">
-          {navItems.map((item) => {
-            const isActive = pathname === item.path || (item.path !== '/' && pathname.startsWith(item.path));
-            return (
-              <button
-                key={item.id}
-                onClick={() => navigate(item.path)}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all duration-300 flex-shrink-0",
-                  isActive 
-                    ? "bg-surface text-primary shadow-sm" 
-                    : "text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary"
-                )}
-              >
-                <item.icon className={cn("h-4 w-4", isActive ? "fill-primary/20" : "")} />
-                <span className={cn("text-[10px] font-black uppercase tracking-tight", isActive ? "block" : "hidden lg:block")}>
-                  {item.label}
-                </span>
-              </button>
-            );
-          })}
-        </nav>
 
         {/* Actions Section */}
         <div className="flex items-center gap-1 flex-shrink-0">
@@ -123,6 +85,60 @@ const Navbar = ({ isDark, toggleTheme }: { isDark: boolean, toggleTheme: () => v
         </div>
       </div>
     </header>
+  );
+};
+
+const BottomNav = () => {
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const isAdmin = localStorage.getItem('isAdmin') === 'true';
+
+  const navItems = [
+    { id: 'home', label: 'Início', icon: HomeIcon, path: '/' },
+    { id: 'menu', label: 'Cardápio', icon: MenuIcon, path: '/menu' },
+    { id: 'about', label: 'Sobre', icon: Info, path: '/about' },
+    { 
+      id: isAdmin ? 'admin' : 'auth', 
+      label: isAdmin ? 'Admin' : 'Perfil', 
+      icon: isAdmin ? LayoutDashboard : User, 
+      path: isAdmin ? '/admin' : '/auth' 
+    },
+  ];
+
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-surface/95 backdrop-blur-2xl border-t border-primary/10 px-6 py-3 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+      <div className="max-w-md mx-auto flex items-center justify-between">
+        {navItems.map((item) => {
+          const isActive = pathname === item.path || (item.path !== '/' && pathname.startsWith(item.path));
+          return (
+            <button
+              key={item.id}
+              onClick={() => navigate(item.path)}
+              className={cn(
+                "flex flex-col items-center gap-1.5 transition-all duration-300 relative px-2",
+                isActive ? "text-primary" : "text-slate-400 dark:text-slate-500 hover:text-primary/70"
+              )}
+            >
+              {isActive && (
+                <motion.div 
+                  layoutId="activeNav"
+                  className="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-full"
+                />
+              )}
+              <div className={cn(
+                "p-2 rounded-2xl transition-all",
+                isActive ? "bg-primary/10 scale-110" : ""
+              )}>
+                <item.icon className={cn("h-5 w-5", isActive ? "fill-primary/20" : "")} />
+              </div>
+              <span className={cn("text-[9px] font-black uppercase tracking-widest", isActive ? "opacity-100" : "opacity-70")}>
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </nav>
   );
 };
 
@@ -182,9 +198,9 @@ const HomeScreen = ({ isDark, toggleTheme, products }: { isDark: boolean, toggle
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="bg-background min-h-screen pb-10"
+      className="bg-background min-h-screen pb-32"
     >
-      <Navbar isDark={isDark} toggleTheme={toggleTheme} />
+      <TopBar isDark={isDark} toggleTheme={toggleTheme} />
 
       <main className="max-w-7xl mx-auto w-full">
         <section className="px-6 py-8 md:py-12">
@@ -317,6 +333,7 @@ const HomeScreen = ({ isDark, toggleTheme, products }: { isDark: boolean, toggle
         </div>
       </section>
       </main>
+      <BottomNav />
     </motion.div>
   );
 };
@@ -334,9 +351,9 @@ const MenuScreen = ({ isDark, toggleTheme, products }: { isDark: boolean, toggle
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="pb-24 bg-background min-h-screen"
+      className="pb-32 bg-background min-h-screen"
     >
-      <Navbar isDark={isDark} toggleTheme={toggleTheme} />
+      <TopBar isDark={isDark} toggleTheme={toggleTheme} />
 
       <main className="max-w-7xl mx-auto w-full">
         <div className="px-6 pt-8 md:pt-12 text-center mb-10 md:mb-14">
@@ -381,6 +398,7 @@ const MenuScreen = ({ isDark, toggleTheme, products }: { isDark: boolean, toggle
         ))}
       </div>
       </main>
+      <BottomNav />
     </motion.div>
   );
 };
@@ -575,11 +593,11 @@ const CategoryScreen = ({ isDark, toggleTheme, products, settings }: { isDark: b
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="bg-background min-h-screen"
+      className="bg-background min-h-screen pb-32"
     >
-      <Navbar isDark={isDark} toggleTheme={toggleTheme} />
+      <TopBar isDark={isDark} toggleTheme={toggleTheme} />
 
-      <main className="max-w-7xl mx-auto w-full pb-24">
+      <main className="max-w-7xl mx-auto w-full">
         <div className="px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-8">
           {categoryProducts.length > 0 ? categoryProducts.map(product => (
           <ProductCard key={product.id} product={product} onClick={() => navigate(`/product/${product.id}`)} />
@@ -590,6 +608,7 @@ const CategoryScreen = ({ isDark, toggleTheme, products, settings }: { isDark: b
         )}
       </div>
       </main>
+      <BottomNav />
     </motion.div>
   );
 };
@@ -801,9 +820,9 @@ const AboutScreen = ({ isDark, toggleTheme, settings }: { isDark: boolean, toggl
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="pb-24 bg-background min-h-screen"
+      className="pb-32 bg-background min-h-screen"
     >
-      <Navbar isDark={isDark} toggleTheme={toggleTheme} />
+      <TopBar isDark={isDark} toggleTheme={toggleTheme} />
 
       <main className="max-w-4xl mx-auto w-full">
         <section className="p-6">
@@ -879,6 +898,7 @@ const AboutScreen = ({ isDark, toggleTheme, settings }: { isDark: boolean, toggl
         </div>
       </section>
       </main>
+      <BottomNav />
     </motion.div>
   );
 };
@@ -905,9 +925,9 @@ const AuthScreen = ({ isDark, toggleTheme }: { isDark: boolean, toggleTheme: () 
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -20 }}
-        className="min-h-screen bg-background"
+        className="min-h-screen bg-background pb-32"
       >
-        <Navbar isDark={isDark} toggleTheme={toggleTheme} />
+        <TopBar isDark={isDark} toggleTheme={toggleTheme} />
 
         <div className="px-8 pt-12 max-w-md mx-auto w-full text-center">
           <div className="flex flex-col items-center mb-10">
@@ -947,6 +967,7 @@ const AuthScreen = ({ isDark, toggleTheme }: { isDark: boolean, toggleTheme: () 
              </button>
           </div>
         </div>
+        <BottomNav />
       </motion.div>
     );
   }
@@ -980,9 +1001,9 @@ const AuthScreen = ({ isDark, toggleTheme }: { isDark: boolean, toggleTheme: () 
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="min-h-screen bg-background"
+      className="min-h-screen bg-background pb-32"
     >
-      <Navbar isDark={isDark} toggleTheme={toggleTheme} />
+      <TopBar isDark={isDark} toggleTheme={toggleTheme} />
 
       <div className="px-8 pt-12 max-w-md mx-auto w-full">
         <div className="flex flex-col items-center mb-12">
@@ -1072,6 +1093,7 @@ const AuthScreen = ({ isDark, toggleTheme }: { isDark: boolean, toggleTheme: () 
           </button>
         </div>
       </div>
+      <BottomNav />
     </motion.div>
   );
 };
