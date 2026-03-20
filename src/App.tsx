@@ -550,38 +550,22 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
             </div>
           );
         })}
-      </main>
-
-      <footer className="fixed bottom-0 left-0 right-0 p-6 bg-surface/90 dark:bg-slate-900/90 border-t border-primary/10 dark:border-slate-800 safe-bottom z-50">
-        <div className="max-w-md mx-auto space-y-4">
-          <div className="flex items-center justify-between px-2">
-            <span className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Resumo do Combo</span>
-            <span className="text-xs font-black text-primary">{selectedItems.length} itens</span>
-          </div>
-          
-          {isAnySelected ? (
-            <div className="w-full">
-              <a
-                href={whatsappLink}
-                onClick={handleOrder}
-                className="w-full bg-[#25D366] hover:bg-[#20bd5c] text-white py-4 px-8 rounded-full flex items-center justify-center gap-3 shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-all active:scale-95 duration-200"
-              >
-                <MessageCircle className="w-6 h-6" />
-                <div className="flex flex-col items-center">
-                  <span className="font-black text-sm uppercase tracking-widest leading-none">Pedir pelo WhatsApp</span>
-                  <span className="text-[10px] opacity-80 font-bold mt-1">
-                    {selectedItems.length} itens selecionados
-                  </span>
-                </div>
-              </a>
-            </div>
-          ) : (
-            <div className="w-full bg-slate-100 dark:bg-slate-800 text-slate-400 py-4 px-8 rounded-full flex items-center justify-center gap-3 font-black text-sm uppercase tracking-widest transition-all shadow-inner">
-              Escolha pelo menos 1 item
-            </div>
-          )}
+        <div className="p-6 mt-8 flex justify-center">
+            <a
+              href={whatsappLink}
+              onClick={handleOrder}
+              className="w-full max-w-md bg-[#25D366] hover:bg-[#20bd5c] text-white py-4 px-8 rounded-full flex items-center justify-center gap-3 shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-all active:scale-95 duration-200"
+            >
+              <MessageCircle className="w-6 h-6" />
+              <div className="flex flex-col items-center">
+                <span className="font-black text-sm uppercase tracking-widest leading-none">Pedir pelo WhatsApp</span>
+                <span className="text-[10px] opacity-80 font-bold mt-1">
+                  {selectedItems.length} itens selecionados
+                </span>
+              </div>
+            </a>
         </div>
-      </footer>
+      </main>
     </motion.div>
   );
 };
@@ -807,16 +791,16 @@ const ProductDetailScreen = ({ products, settings }: { products: Product[], sett
         </section>
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100 flex justify-center items-center z-[200] pb-safe">
-        <a
-          href={whatsappLink}
-          onClick={handleOrder}
-          className="w-full max-w-md bg-[#25D366] hover:bg-[#20bd5c] text-white py-4 px-8 rounded-full flex items-center justify-center gap-3 shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-all active:scale-95 duration-200 cursor-pointer"
-        >
-          <MessageCircle className="w-6 h-6" />
-          <span className="text-xl font-black uppercase tracking-tight">Pedir pelo WhatsApp</span>
-        </a>
-      </footer>
+            <div className="mt-12 flex justify-center pb-12">
+              <a
+                href={whatsappLink}
+                onClick={handleOrder}
+                className="w-full max-w-md bg-[#25D366] hover:bg-[#20bd5c] text-white py-5 px-8 rounded-full flex items-center justify-center gap-3 shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-all active:scale-95 duration-200 cursor-pointer"
+              >
+                <MessageCircle className="w-6 h-6" />
+                <span className="text-xl font-black uppercase tracking-tight">Pedir pelo WhatsApp</span>
+              </a>
+            </div>
     </motion.div>
   );
 };
