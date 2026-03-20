@@ -858,11 +858,22 @@ const AboutScreen = ({ isDark, toggleTheme, settings }: { isDark: boolean, toggl
         </div>
 
         <div className="grid grid-cols-1 gap-5">
-          <motion.a
-            href={`https://wa.me/${settings?.whatsapp_number?.replace(/\D/g, '') || '5511999999999'}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-between bg-[#25D366] text-white px-8 py-5 rounded-full font-black shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] active:scale-95 transition-all"
+          <motion.button
+            onClick={async () => {
+              const whatsappUrl = `https://wa.me/${settings?.whatsapp_number?.replace(/\D/g, '') || '5511988789335'}`;
+              const userName = localStorage.getItem('userName') || 'Cliente';
+              
+              await supabase.from('orders').insert([{
+                customer_name: userName,
+                items: [{ name: 'Contato Direto (Página Sobre)', price: 0, quantity: 1 }],
+                total_price: 0,
+                whatsapp_link: whatsappUrl,
+                status: 'contato'
+              }]);
+
+              window.open(whatsappUrl, '_blank');
+            }}
+            className="w-full flex items-center justify-between bg-[#25D366] text-white px-8 py-5 rounded-full font-black shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] active:scale-95 transition-all text-left"
             animate={{ scale: [1, 1.02, 1] }}
             transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
           >
@@ -871,7 +882,7 @@ const AboutScreen = ({ isDark, toggleTheme, settings }: { isDark: boolean, toggl
               <span>WhatsApp</span>
             </div>
             <Plus className="h-6 w-6" />
-          </motion.a>
+          </motion.button>
           
           <div className="grid grid-cols-2 gap-4 mt-2">
             {socialLinks.map((social, idx) => (

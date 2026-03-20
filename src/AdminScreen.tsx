@@ -73,6 +73,18 @@ const AdminScreen = () => {
       } else {
         fetchOrders();
       }
+
+      // Real-time subscription for orders
+      const orderChannel = supabase
+        .channel('admin_orders_realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+          fetchOrders();
+        })
+        .subscribe();
+
+      return () => {
+        orderChannel.unsubscribe();
+      };
     }
   }, [isAdmin, activeTab]);
 
