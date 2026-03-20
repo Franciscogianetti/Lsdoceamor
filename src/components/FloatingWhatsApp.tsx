@@ -15,7 +15,7 @@ const FloatingWhatsApp: React.FC<FloatingWhatsAppProps> = ({ number }) => {
     if (withoutLeadingZero.startsWith('55')) return withoutLeadingZero;
     return '55' + withoutLeadingZero;
   })();
-  const whatsappUrl = `whatsapp://send?phone=${phone}`;
+  const whatsappUrl = `https://wa.me/${phone}/`;
 
   const handleContact = () => {
     const userName = localStorage.getItem('userName') || 'Cliente';

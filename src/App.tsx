@@ -441,8 +441,7 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
   };
 
   const phone = getFormattedPhone(settings?.whatsapp_number);
-  // Deep link protocol for iOS/Safari reliability
-  const whatsappLink = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(
+  const whatsappLink = `https://wa.me/${phone}/?text=${encodeURIComponent(
     `Olá! Gostaria de montar o meu combo:\n\n` +
     comboSections.map(section => {
       const selectedArray = selections[section.id] || [];
@@ -453,7 +452,8 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
     }).join('\n').trim()
   )}`;
 
-  const handleOrder = () => {
+  const handleOrder = (e: React.MouseEvent) => {
+    e.preventDefault();
     try {
       const userName = localStorage.getItem('userName') || 'Cliente';
       const orderItems: any[] = [];
@@ -472,6 +472,9 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
         status: 'pendente'
       }]).then(() => {});
     } catch (err) {}
+    
+    // Force redirect in the same gesture context for Safari
+    window.location.href = whatsappLink;
   };
 
   return (
@@ -709,9 +712,10 @@ const ProductDetailScreen = ({ products, settings }: { products: Product[], sett
   };
 
   const phone = getFormattedPhone(settings?.whatsapp_number);
-  const whatsappLink = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(`Olá! Gostaria de pedir o ${product.name}`)}`;
+  const whatsappLink = `https://wa.me/${phone}/?text=${encodeURIComponent(`Olá! Gostaria de pedir o ${product.name}`)}`;
 
-  const handleOrder = () => {
+  const handleOrder = (e: React.MouseEvent) => {
+    e.preventDefault();
     try {
       const userName = localStorage.getItem('userName') || 'Cliente';
       supabase.from('orders').insert([{
@@ -722,6 +726,9 @@ const ProductDetailScreen = ({ products, settings }: { products: Product[], sett
         status: 'pendente'
       }]).then(() => {});
     } catch (err) {}
+    
+    // Explicit manual redirect for Safari
+    window.location.href = whatsappLink;
   };
 
   return (
