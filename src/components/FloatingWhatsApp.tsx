@@ -8,9 +8,12 @@ interface FloatingWhatsAppProps {
 }
 
 const FloatingWhatsApp: React.FC<FloatingWhatsAppProps> = ({ number }) => {
-  const phone = (number.replace(/\D/g, '') || '5511988789335').startsWith('55') 
-    ? number.replace(/\D/g, '') 
-    : '55' + (number.replace(/\D/g, '') || '11988789335');
+  const phone = (() => {
+    const clean = (number || '').replace(/\D/g, '');
+    if (!clean || clean.length < 10) return '5511988789335';
+    if (clean.startsWith('55')) return clean;
+    return '55' + clean.replace(/^0/, '');
+  })();
   const whatsappUrl = `https://api.whatsapp.com/send?phone=${phone}`;
 
   const handleContact = () => {
@@ -29,6 +32,8 @@ const FloatingWhatsApp: React.FC<FloatingWhatsAppProps> = ({ number }) => {
   return (
     <a
       href={whatsappUrl}
+      target="_blank"
+      rel="noopener noreferrer"
       onClick={() => {
         try {
           handleContact();

@@ -431,20 +431,24 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
   const selectedItems = Object.values(selections).flat() as Product[];
   const isAnySelected = selectedItems.length > 0;
 
-    const whatsappLink = `https://api.whatsapp.com/send?phone=${
-      (settings?.whatsapp_number?.replace(/\D/g, '') || '5511988789335').startsWith('55') 
-        ? settings?.whatsapp_number?.replace(/\D/g, '') 
-        : '55' + (settings?.whatsapp_number?.replace(/\D/g, '') || '11988789335')
-    }&text=${encodeURIComponent(
-      `Olá! Gostaria de montar o meu combo:\n\n` +
-      comboSections.map(section => {
-        const selectedArray = selections[section.id] || [];
-        if (selectedArray.length > 0) {
-          return `*${section.name}*:\n` + selectedArray.map(item => `- ${item.name}`).join('\n') + '\n';
-        }
-        return '';
-      }).join('\n').trim()
-    )}`;
+  const getFormattedPhone = (num: string | undefined) => {
+    const clean = (num || '').replace(/\D/g, '');
+    if (!clean || clean.length < 10) return '5511988789335'; // Early return for invalid/fallback
+    if (clean.startsWith('55')) return clean;
+    return '55' + clean.replace(/^0/, '');
+  };
+
+  const phone = getFormattedPhone(settings?.whatsapp_number);
+  const whatsappLink = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(
+    `Olá! Gostaria de montar o meu combo:\n\n` +
+    comboSections.map(section => {
+      const selectedArray = selections[section.id] || [];
+      if (selectedArray.length > 0) {
+        return `*${section.name}*:\n` + selectedArray.map(item => `- ${item.name}`).join('\n') + '\n';
+      }
+      return '';
+    }).join('\n').trim()
+  )}`;
 
   const handleOrder = () => {
     const orderItems: any[] = [];
@@ -455,19 +459,31 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
       });
     });
 
-    // Record in database
-    const userName = localStorage.getItem('userName') || 'Cliente';
-    const totalPrice = selectedItems.reduce((sum, item) => sum + item.price, 0);
+    try {
+      // Record in database
+      const userName = localStorage.getItem('userName') || 'Cliente';
+      const totalPrice = selectedItems.reduce((sum, item) => sum + item.price, 0);
 
-    supabase.from('orders').insert([{
-      customer_name: userName,
-      items: orderItems,
-      total_price: totalPrice,
-      whatsapp_link: whatsappLink,
-      status: 'pendente'
-    }]).then(({ error }) => {
-      if (error) console.error('Error recording combo order:', error);
-    });
+      supabase.from('orders').insert([{
+        customer_name: userName,
+        items: orderItems,
+        total_price: totalPrice,
+        whatsapp_link: whatsappLink,
+        status: 'pendente'
+      }]).then(({ error }) => {
+        if (error) console.error('Error recording combo order:', error);
+      });
+    } catch (err) {
+      console.error('DB Error:', err);
+    }
+    
+    // Fallback for some browsers if <a> fails
+    setTimeout(() => {
+      if (window.location.href.includes('combo')) {
+        // Still on same page after click? Try manual redirect
+        // But only if not opened in new tab
+      }
+    }, 1000);
   };
 
   return (
@@ -555,13 +571,9 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
           {isAnySelected ? (
             <a
               href={whatsappLink}
-              onClick={() => {
-                try {
-                  handleOrder();
-                } catch (e) {
-                  console.error('Order recording error:', e);
-                }
-              }}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={handleOrder}
               className="w-full bg-[#25D366] hover:bg-[#20bd5c] text-white py-4 px-8 rounded-full flex items-center justify-center gap-3 shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-all active:scale-95 duration-200 z-[100]"
             >
               <MessageCircle className="w-6 h-6" />
@@ -700,9 +712,14 @@ const ProductDetailScreen = ({ products, settings }: { products: Product[], sett
 
   if (!product) return <div>Produto não encontrado</div>;
 
-  const phone = (settings?.whatsapp_number?.replace(/\D/g, '') || '5511988789335').startsWith('55') 
-    ? settings?.whatsapp_number?.replace(/\D/g, '') 
-    : '55' + (settings?.whatsapp_number?.replace(/\D/g, '') || '11988789335');
+  const getFormattedPhone = (num: string | undefined) => {
+    const clean = (num || '').replace(/\D/g, '');
+    if (!clean || clean.length < 10) return '5511988789335';
+    if (clean.startsWith('55')) return clean;
+    return '55' + clean.replace(/^0/, '');
+  };
+
+  const phone = getFormattedPhone(settings?.whatsapp_number);
   const whatsappLink = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(`Olá! Gostaria de pedir o ${product.name}`)}`;
 
   const handleOrder = () => {
@@ -799,13 +816,9 @@ const ProductDetailScreen = ({ products, settings }: { products: Product[], sett
       <footer className="fixed bottom-0 left-0 right-0 p-6 bg-white/80 backdrop-blur-xl border-t border-gray-100 flex justify-center items-center z-[100] pb-safe">
         <a
           href={whatsappLink}
-          onClick={() => {
-            try {
-              handleOrder();
-            } catch (e) {
-              console.error('Order recording error:', e);
-            }
-          }}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={handleOrder}
           className="w-full max-w-md bg-[#25D366] hover:bg-[#20bd5c] text-white py-4 px-8 rounded-full flex items-center justify-center gap-3 shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-all active:scale-95 duration-200"
         >
           <MessageCircle className="w-6 h-6" />
@@ -874,17 +887,24 @@ const AboutScreen = ({ isDark, toggleTheme, settings }: { isDark: boolean, toggl
         <div className="grid grid-cols-1 gap-5">
           <a
             href={`https://api.whatsapp.com/send?phone=${
-              (settings?.whatsapp_number?.replace(/\D/g, '') || '5511988789335').startsWith('55') 
-                ? settings?.whatsapp_number?.replace(/\D/g, '') 
-                : '55' + (settings?.whatsapp_number?.replace(/\D/g, '') || '11988789335')
+              (() => {
+                const clean = (settings?.whatsapp_number || '').replace(/\D/g, '');
+                if (!clean || clean.length < 10) return '5511988789335';
+                if (clean.startsWith('55')) return clean;
+                return '55' + clean.replace(/^0/, '');
+              })()
             }`}
+            target="_blank"
+            rel="noopener noreferrer"
             onClick={() => {
               try {
-                const whatsappUrl = `https://api.whatsapp.com/send?phone=${
-                  (settings?.whatsapp_number?.replace(/\D/g, '') || '5511988789335').startsWith('55') 
-                    ? settings?.whatsapp_number?.replace(/\D/g, '') 
-                    : '55' + (settings?.whatsapp_number?.replace(/\D/g, '') || '11988789335')
-                }`;
+                const phone = (() => {
+                  const clean = (settings?.whatsapp_number || '').replace(/\D/g, '');
+                  if (!clean || clean.length < 10) return '5511988789335';
+                  if (clean.startsWith('55')) return clean;
+                  return '55' + clean.replace(/^0/, '');
+                })();
+                const whatsappUrl = `https://api.whatsapp.com/send?phone=${phone}`;
                 const userName = localStorage.getItem('userName') || 'Cliente';
                 
                 supabase.from('orders').insert([{
@@ -898,7 +918,7 @@ const AboutScreen = ({ isDark, toggleTheme, settings }: { isDark: boolean, toggl
                 console.error('Contact error:', e);
               }
             }}
-            className="w-full flex items-center justify-between bg-[#25D366] text-white px-8 py-5 rounded-full font-black shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-all active:scale-95 text-left"
+            className="w-full flex items-center justify-between bg-[#25D366] text-white px-8 py-5 rounded-full font-black shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] active:scale-95 transition-all text-left"
           >
             <div className="flex items-center gap-4 text-lg uppercase tracking-widest">
               <MessageCircle className="w-7 h-7" />
