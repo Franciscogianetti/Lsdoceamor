@@ -441,7 +441,7 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
   };
 
   const phone = getFormattedPhone(settings?.whatsapp_number);
-  const whatsappLink = `https://wa.me/${phone}/?text=${encodeURIComponent(
+  const whatsappLink = `https://wa.me/${phone}?text=${encodeURIComponent(
     `Olá! Gostaria de montar o meu combo:\n\n` +
     comboSections.map(section => {
       const selectedArray = selections[section.id] || [];
@@ -452,8 +452,7 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
     }).join('\n').trim()
   )}`;
 
-  const handleOrder = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleOrder = () => {
     try {
       const userName = localStorage.getItem('userName') || 'Cliente';
       const orderItems: any[] = [];
@@ -472,9 +471,6 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
         status: 'pendente'
       }]).then(() => {});
     } catch (err) {}
-    
-    // Force redirect in the same gesture context for Safari
-    window.location.href = whatsappLink;
   };
 
   return (
@@ -553,8 +549,9 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
         <div className="p-6 mt-8 flex justify-center">
             <a
               href={whatsappLink}
+              target="_top"
               onClick={handleOrder}
-              className="w-full max-w-md bg-[#25D366] hover:bg-[#20bd5c] text-white py-4 px-8 rounded-full flex items-center justify-center gap-3 shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-all active:scale-95 duration-200"
+              className="w-full max-w-md bg-[#25D366] hover:bg-[#20bd5c] text-white py-5 px-8 rounded-full flex items-center justify-center gap-3 shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-all active:scale-95 duration-200"
             >
               <MessageCircle className="w-6 h-6" />
               <div className="flex flex-col items-center">
@@ -696,10 +693,9 @@ const ProductDetailScreen = ({ products, settings }: { products: Product[], sett
   };
 
   const phone = getFormattedPhone(settings?.whatsapp_number);
-  const whatsappLink = `https://wa.me/${phone}/?text=${encodeURIComponent(`Olá! Gostaria de pedir o ${product.name}`)}`;
+  const whatsappLink = `https://wa.me/${phone}?text=${encodeURIComponent(`Olá! Gostaria de pedir o ${product.name}`)}`;
 
-  const handleOrder = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleOrder = () => {
     try {
       const userName = localStorage.getItem('userName') || 'Cliente';
       supabase.from('orders').insert([{
@@ -710,9 +706,6 @@ const ProductDetailScreen = ({ products, settings }: { products: Product[], sett
         status: 'pendente'
       }]).then(() => {});
     } catch (err) {}
-    
-    // Explicit manual redirect for Safari
-    window.location.href = whatsappLink;
   };
 
   return (
@@ -794,6 +787,7 @@ const ProductDetailScreen = ({ products, settings }: { products: Product[], sett
             <div className="mt-12 flex justify-center pb-12">
               <a
                 href={whatsappLink}
+                target="_top"
                 onClick={handleOrder}
                 className="w-full max-w-md bg-[#25D366] hover:bg-[#20bd5c] text-white py-5 px-8 rounded-full flex items-center justify-center gap-3 shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-all active:scale-95 duration-200 cursor-pointer"
               >
