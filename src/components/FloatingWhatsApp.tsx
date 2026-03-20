@@ -8,7 +8,10 @@ interface FloatingWhatsAppProps {
 }
 
 const FloatingWhatsApp: React.FC<FloatingWhatsAppProps> = ({ number }) => {
-  const whatsappUrl = `https://wa.me/${number.replace(/\D/g, '') || '5511988789335'}`;
+  const phone = (number.replace(/\D/g, '') || '5511988789335').startsWith('55') 
+    ? number.replace(/\D/g, '') 
+    : '55' + (number.replace(/\D/g, '') || '11988789335');
+  const whatsappUrl = `https://api.whatsapp.com/send?phone=${phone}`;
 
   const handleContact = () => {
     const userName = localStorage.getItem('userName') || 'Cliente';
@@ -26,8 +29,6 @@ const FloatingWhatsApp: React.FC<FloatingWhatsAppProps> = ({ number }) => {
   return (
     <motion.a
       href={whatsappUrl}
-      target="_blank"
-      rel="noopener noreferrer"
       onClick={handleContact}
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}

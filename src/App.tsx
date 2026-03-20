@@ -431,16 +431,20 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
   const selectedItems = Object.values(selections).flat() as Product[];
   const isAnySelected = selectedItems.length > 0;
 
-  const whatsappLink = `https://wa.me/${settings?.whatsapp_number?.replace(/\D/g, '') || '5511988789335'}?text=${encodeURIComponent(
-    `Olá! Gostaria de montar o meu combo:\n\n` +
-    comboSections.map(section => {
-      const selectedArray = selections[section.id] || [];
-      if (selectedArray.length > 0) {
-        return `*${section.name}*:\n` + selectedArray.map(item => `- ${item.name}`).join('\n') + '\n';
-      }
-      return '';
-    }).join('\n').trim()
-  )}`;
+    const whatsappLink = `https://api.whatsapp.com/send?phone=${
+      (settings?.whatsapp_number?.replace(/\D/g, '') || '5511988789335').startsWith('55') 
+        ? settings?.whatsapp_number?.replace(/\D/g, '') 
+        : '55' + (settings?.whatsapp_number?.replace(/\D/g, '') || '11988789335')
+    }&text=${encodeURIComponent(
+      `Olá! Gostaria de montar o meu combo:\n\n` +
+      comboSections.map(section => {
+        const selectedArray = selections[section.id] || [];
+        if (selectedArray.length > 0) {
+          return `*${section.name}*:\n` + selectedArray.map(item => `- ${item.name}`).join('\n') + '\n';
+        }
+        return '';
+      }).join('\n').trim()
+    )}`;
 
   const handleOrder = () => {
     const orderItems: any[] = [];
@@ -551,8 +555,6 @@ const ComboBuilder = ({ products, settings }: { products: Product[], settings: a
           {isAnySelected ? (
             <motion.a
               href={whatsappLink}
-              target="_blank"
-              rel="noopener noreferrer"
               onClick={handleOrder}
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -694,7 +696,10 @@ const ProductDetailScreen = ({ products, settings }: { products: Product[], sett
 
   if (!product) return <div>Produto não encontrado</div>;
 
-  const whatsappLink = `https://wa.me/${settings?.whatsapp_number?.replace(/\D/g, '') || '5511988789335'}?text=Olá! Gostaria de pedir o ${product.name}`;
+  const phone = (settings?.whatsapp_number?.replace(/\D/g, '') || '5511988789335').startsWith('55') 
+    ? settings?.whatsapp_number?.replace(/\D/g, '') 
+    : '55' + (settings?.whatsapp_number?.replace(/\D/g, '') || '11988789335');
+  const whatsappLink = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(`Olá! Gostaria de pedir o ${product.name}`)}`;
 
   const handleOrder = () => {
     const userName = localStorage.getItem('userName') || 'Cliente';
@@ -790,8 +795,6 @@ const ProductDetailScreen = ({ products, settings }: { products: Product[], sett
       <footer className="fixed bottom-0 left-0 right-0 p-6 bg-white/80 backdrop-blur-xl border-t border-gray-100 flex justify-center items-center z-40 pb-safe">
         <motion.a
           href={whatsappLink}
-          target="_blank"
-          rel="noopener noreferrer"
           onClick={handleOrder}
           className="w-full max-w-md bg-[#25D366] hover:bg-[#20bd5c] text-white py-4 px-8 rounded-full flex items-center justify-center gap-3 shadow-[0_10px_25px_-5px_rgba(37,211,102,0.4)] transition-transform active:scale-95 duration-200"
           animate={{ scale: [1, 1.03, 1] }}
