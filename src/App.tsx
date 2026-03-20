@@ -915,23 +915,22 @@ const AboutScreen = ({ isDark, toggleTheme, settings }: { isDark: boolean, toggl
   );
 };
 
-const AuthScreen = ({ isDark, toggleTheme, settings }: { isDark: boolean, toggleTheme: () => void, settings: any }) => {
+const AuthScreen = ({ isDark, toggleTheme, settings, setUser, user }: { isDark: boolean, toggleTheme: () => void, settings: any, setUser: (u: string | null) => void, user: string | null }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [sessionUser, setSessionUser] = useState<string | null>(localStorage.getItem('userName'));
   const navigate = useNavigate();
 
   const handleLogout = () => {
     localStorage.removeItem('userName');
     localStorage.removeItem('isAdmin');
-    setSessionUser(null);
-    navigate('/');
+    setUser(null);
+    navigate('/auth');
   };
 
-  if (sessionUser) {
+  if (user) {
     return (
       <motion.div
         initial={{ opacity: 0, x: 20 }}
@@ -947,7 +946,7 @@ const AuthScreen = ({ isDark, toggleTheme, settings }: { isDark: boolean, toggle
               <User className="w-12 h-12" />
             </div>
             <h2 className="text-3xl font-black text-slate-900 dark:text-slate-50 tracking-tight">
-              Olá, <span className="text-primary italic">{sessionUser}</span>!
+              Olá, <span className="text-primary italic">{user}</span>!
             </h2>
             <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
               Você está conectado à sua conta.
@@ -986,25 +985,22 @@ const AuthScreen = ({ isDark, toggleTheme, settings }: { isDark: boolean, toggle
 
   const handleAuth = (e: React.FormEvent) => {
     e.preventDefault();
+    let loggedUserName = '';
+    
     if (email === 'layssousa@gmail.com' && password === '123456') {
-      localStorage.setItem('userName', 'Lays');
+      loggedUserName = 'Lays';
       localStorage.setItem('isAdmin', 'true');
-      navigate('/admin');
-      return;
-    }
-
-    if (isLogin) {
-      // Mock login for demonstration
+    } else if (isLogin) {
       const mockName = email.split('@')[0];
-      localStorage.setItem('userName', mockName.charAt(0).toUpperCase() + mockName.slice(1));
+      loggedUserName = mockName.charAt(0).toUpperCase() + mockName.slice(1);
       localStorage.setItem('isAdmin', 'false');
     } else {
-      // Registration: save the actual name entered
-      if (name && typeof name === 'string') {
-        localStorage.setItem('userName', name);
-      }
+      loggedUserName = name || 'Cliente';
       localStorage.setItem('isAdmin', 'false');
     }
+
+    localStorage.setItem('userName', loggedUserName);
+    setUser(loggedUserName);
     navigate('/');
   };
 
@@ -1120,6 +1116,7 @@ export default function App() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [settings, setSettings] = useState<any>(null);
+  const [user, setUser] = useState<string | null>(localStorage.getItem('userName'));
 
   const { pathname } = useLocation();
 
@@ -1186,8 +1183,7 @@ export default function App() {
 
   // Auth Guard Component
   const RequireAuth = ({ children }: { children: React.ReactNode }) => {
-    const userName = localStorage.getItem('userName');
-    if (!userName) {
+    if (!user) {
       return <Navigate to="/auth" replace />;
     }
     return <>{children}</>;
@@ -1206,14 +1202,14 @@ export default function App() {
             <Route path="/category/:id" element={<RequireAuth><CategoryScreen isDark={isDark} toggleTheme={toggleTheme} products={availableProducts} settings={settings} /></RequireAuth>} />
             <Route path="/product/:id" element={<RequireAuth><ProductDetailScreen products={products} settings={settings} /></RequireAuth>} />
             <Route path="/about" element={<RequireAuth><AboutScreen isDark={isDark} toggleTheme={toggleTheme} settings={settings} /></RequireAuth>} />
-            <Route path="/auth" element={<AuthScreen isDark={isDark} toggleTheme={toggleTheme} settings={settings} />} />
+            <Route path="/auth" element={<AuthScreen isDark={isDark} toggleTheme={toggleTheme} settings={settings} setUser={setUser} user={user} />} />
             <Route path="/admin" element={<AdminScreen />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AnimatePresence>
         
         {/* Floating WhatsApp only on non-admin routes AND after login */}
-        {!pathname.startsWith('/admin') && pathname !== '/auth' && localStorage.getItem('userName') && settings?.whatsapp_number && (
+        {!pathname.startsWith('/admin') && pathname !== '/auth' && user && settings?.whatsapp_number && (
           <FloatingWhatsApp number={settings.whatsapp_number} />
         )}
       </div>
